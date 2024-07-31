@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Birth!</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body,
+            html {
+                height: 100%;
+                margin: 0;
+                font-family: "Plus Jakarta Sans", sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #111;
+                color: #fff;
+                overflow: hidden;
+                /* background: linear-gradient(
+                    45deg,
+                    #ff9a9e 0%,
+                    #fad0c4 99%,
+                    #fad0c4 100%
+                ); */
+            }
+
+            .container {
+                text-align: center;
+                background-color: rgba(30, 30, 30, 0.8);
+                padding: 2rem;
+                border-radius: 16px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+                /* border: 1px solid #333; */
+                position: absolute;
+                cursor: move;
+                user-select: none;
+                touch-action: none;
+            }
+
+            h1 {
+                margin-bottom: 1rem;
+                font-size: 1.5rem;
+                /* text-transform: uppercase; */
+                letter-spacing: 2px;
+                font-weight: 700;
+            }
+
+            #countdown {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+                display: flex;
+                justify-content: space-around;
+            }
+
+            .time-unit {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                transition: transform 0.5s;
+            }
+
+            .time-unit span {
+                font-size: 2.5rem;
+                font-weight: 700;
+            }
+
+            .time-unit.animate {
+                transform: scale(1.2);
+            }
+
+            .label {
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                margin-top: 0.5rem;
+                color: #999;
+                font-weight: 400;
+            }
+
+            @media (max-width: 600px) {
+                .container {
+                    padding: 1rem;
+                }
+                #countdown {
+                    font-size: 1.5rem;
+                }
+                .time-unit span {
+                    font-size: 2rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container" id="draggable">
+            <h1>Hitung Mundur</h1>
+            <div id="countdown">
+                <div class="time-unit">
+                    <span id="days"></span>
+                    <div class="label">hari</div>
+                </div>
+                <div class="time-unit">
+                    <span id="hours"></span>
+                    <div class="label">jam</div>
+                </div>
+                <div class="time-unit">
+                    <span id="minutes"></span>
+                    <div class="label">menit</div>
+                </div>
+                <div class="time-unit">
+                    <span id="seconds"></span>
+                    <div class="label">detik</div>
+                </div>
+            </div>
+            <p>sampai ulang tahun!</p>
+        </div>
+
+        <script>
+            function getNextBirthday() {
+                const now = new Date();
+                let birthday = new Date(now.getFullYear(), 7, 17); // 17 Agustus
+
+                if (now > birthday) {
+                    birthday.setFullYear(birthday.getFullYear() + 1);
+                }
+
+                return birthday;
+            }
+
+            function updateCountdown() {
+                const now = new Date();
+                const birthday = getNextBirthday();
+                const diff = birthday - now;
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor(
+                    (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+                );
+                const minutes = Math.floor(
+                    (diff % (1000 * 60 * 60)) / (1000 * 60),
+                );
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById("days").textContent = days;
+                document.getElementById("hours").textContent = hours;
+                document.getElementById("minutes").textContent = minutes;
+                document.getElementById("seconds").textContent = seconds;
+
+                animateChange("seconds");
+                if (seconds === 0) animateChange("minutes");
+                if (seconds === 0 && minutes === 0) animateChange("hours");
+                if (seconds === 0 && minutes === 0 && hours === 0)
+                    animateChange("days");
+            }
+
+            function animateChange(unit) {
+                const element = document.getElementById(unit).parentElement;
+                element.classList.add("animate");
+                setTimeout(() => {
+                    element.classList.remove("animate");
+                }, 500);
+            }
+
+            function makeDraggable(element) {
+                let pos1 = 0,
+                    pos2 = 0,
+                    pos3 = 0,
+                    pos4 = 0;
+                let isDragging = false;
+
+                element.addEventListener("mousedown", dragStart);
+                element.addEventListener("touchstart", dragStart, {
+                    passive: false,
+                });
+
+                function dragStart(e) {
+                    isDragging = true;
+                    e.preventDefault();
+                    if (e.type === "touchstart") {
+                        pos3 = e.touches[0].clientX;
+                        pos4 = e.touches[0].clientY;
+                    } else {
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                    }
+                    document.addEventListener("mousemove", drag);
+                    document.addEventListener("touchmove", drag, {
+                        passive: false,
+                    });
+                    document.addEventListener("mouseup", dragEnd);
+                    document.addEventListener("touchend", dragEnd);
+                }
+
+                function drag(e) {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (e.type === "touchmove") {
+                        pos1 = pos3 - e.touches[0].clientX;
+                        pos2 = pos4 - e.touches[0].clientY;
+                        pos3 = e.touches[0].clientX;
+                        pos4 = e.touches[0].clientY;
+                    } else {
+                        pos1 = pos3 - e.clientX;
+                        pos2 = pos4 - e.clientY;
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                    }
+                    element.style.top = element.offsetTop - pos2 + "px";
+                    element.style.left = element.offsetLeft - pos1 + "px";
+                }
+
+                function dragEnd() {
+                    isDragging = false;
+                    document.removeEventListener("mousemove", drag);
+                    document.removeEventListener("touchmove", drag);
+                    document.removeEventListener("mouseup", dragEnd);
+                    document.removeEventListener("touchend", dragEnd);
+                }
+            }
+
+            // Inisialisasi
+            const draggableElement = document.getElementById("draggable");
+            makeDraggable(draggableElement);
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+        </script>
+    </body>
+</html>
